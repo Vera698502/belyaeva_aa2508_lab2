@@ -8,13 +8,25 @@
 
 using namespace std;
 
-struct Pipe {
+class Pipe {
+private:
     string name;
     double length;
     double diameter;
     bool repairing;
 
+public:
     Pipe() : name(""), length(0.0), diameter(0.0), repairing(false) {}
+
+    string getName() const { return name; }
+    double getLength() const { return length; }
+    double getDiametr() const { return diameter; }
+    bool isRepairing() const { return repairing; }
+
+    void setName(const string& newName) { name = newName; }
+    void setLength(double newLength) { length = newLength; }
+    void setDiameter(double newDiameter) { diameter = newDiameter; }
+    void setRepairing(bool newRepairing) { repairing = newRepairing; }
 
     void input() {
         cout << "Введите название трубы:  ";
@@ -80,13 +92,25 @@ struct Pipe {
     }
 };
 
-struct CompressorStation {
+class CompressorStation {
+private:
     string name;
     int numberOfWorkshops;
     int operatingWorkshops;
     int stationClass;
 
+public:
     CompressorStation() : name(""), numberOfWorkshops(0), operatingWorkshops(0), stationClass(0) {}
+
+    string getName() const { return name; }
+    int getNumberOfWorkshops() const { return numberOfWorkshops; }
+    int getOperatingWorkshops() const { return operatingWorkshops; }
+    int getStationClass() const { return stationClass; }
+
+    void setName(const string& newName) { name = newName; }
+    void setNumberOfWorkshops(int n) { numberOfWorkshops = n; }
+    void setOperatingWorkshops(int n) { operatingWorkshops = n; }
+    void setStationClass(int n) { stationClass = n; }
 
     void input() {
         cout << "Введите название кс: ";
