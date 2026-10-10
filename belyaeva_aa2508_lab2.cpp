@@ -11,18 +11,20 @@ using namespace std;
 
 class Pipe {
 private:
+    int id;
     string name;
     double length;
     double diameter;
     bool repairing;  
 
 public:
-    Pipe() : name(""), length(0.0), diameter(0.0), repairing(false) {}
+    Pipe(int newId=0) : id(newId), name(""), length(0.0), diameter(0.0), repairing(false) {}
 
     string getName() const { return name; }
     double getLength() const { return length; }
     double getDiametr() const { return diameter; }
     bool isRepairing() const { return repairing; }
+    int getId() const { return id; }
 
     void setName(const string& newName) { name = newName; }
     void setLength(double newLength) { length = newLength; }
@@ -52,7 +54,7 @@ public:
     }
 
     void print() const {
-        cout << "\nТруба\n"
+        cout << "\nТруба с Id"<<id<<"\n"
             << "Название: " << name << "\n"
             << "Длина: " << length << " км\n"
             << "Диаметр: " << diameter << " мм\n"
@@ -68,7 +70,7 @@ public:
     }
 
     void saveToFile(ofstream& file) {
-        file << "1\n";
+        file << id << "\n";
         file << name << "\n";
         file << length << "\n";
         file << diameter << "\n";
@@ -76,14 +78,8 @@ public:
     }
 
     bool loadFromFile(ifstream& file) {
-        int marker;
-        file >> marker;
+        file >> id;
         file.ignore();
-
-        if (marker == 0) {
-            return false;
-        }
-
         getline(file, name);
         file >> length;
         file >> diameter;
@@ -95,18 +91,20 @@ public:
 
 class CompressorStation {
 private:
+    int id;
     string name;
     int numberOfWorkshops;
     int operatingWorkshops;
     int stationClass;
 
 public:
-    CompressorStation() : name(""), numberOfWorkshops(0), operatingWorkshops(0), stationClass(0) {}
+    CompressorStation(int newId=0) : id(newId), name(""), numberOfWorkshops(0), operatingWorkshops(0), stationClass(0) {}
 
     string getName() const { return name; }
     int getNumberOfWorkshops() const { return numberOfWorkshops; }
     int getOperatingWorkshops() const { return operatingWorkshops; }
     int getStationClass() const { return stationClass; }
+    int getId() const { return id; }
 
     void setName(const string& newName) { name = newName; }
     void setNumberOfWorkshops(int n) { numberOfWorkshops = n; }
@@ -136,7 +134,7 @@ public:
     }
 
     void print() const {
-        cout << "\n КС \n"
+        cout << "\n КС с Id"<<id<<"\n"
             << "Название: " << name << "\n"
             << "Количество цехов: " << numberOfWorkshops << "\n"
             << "Количество работающих цехов: " << operatingWorkshops << "\n"
@@ -161,7 +159,7 @@ public:
     }
 
     void saveToFile(ofstream& file) {
-        file << "1\n";
+        file << id << "\n";
         file << name << "\n";
         file << numberOfWorkshops << "\n";
         file << operatingWorkshops << "\n";
@@ -169,14 +167,8 @@ public:
     }
 
     bool loadFromFile(ifstream& file) {
-        int marker;
-        file >> marker;
+        file >> id;
         file.ignore();
-
-        if (marker == 0) {
-            return false;
-        }
-
         getline(file, name);
         file >> numberOfWorkshops;
         file >> operatingWorkshops;
@@ -205,6 +197,8 @@ int main()
             << "5.Редактировать кс (запуск/ остановка цеха)\n"
             << "6. Удалить трубу по id\n"
             << "7. Удалить кс по id\n"
+            <<"8. Загрузить в файл\n"
+            <<"9. Выгрузить из файла\n"
             << "0. Выход\n"
             << "\n";
 
@@ -221,18 +215,18 @@ int main()
         switch (choice) {
 
         case 1: {
-            Pipe newPipe;
-            newPipe.input();
             int id = nextPipeId++;
+            Pipe newPipe(id);
+            newPipe.input();
             pipe.emplace(id, newPipe);
             cout << "Труба добавлена (Id" << id << ")\n";
             break;
         }
 
         case 2: {
-            CompressorStation newCs;
-            newCs.input();
             int id = nextCsId++;
+            CompressorStation newCs(id);
+            newCs.input();
             compressorStation.emplace(id, newCs);
             cout << "Добавлена кс (Id" << id << ")\n";
             break;
@@ -351,61 +345,76 @@ int main()
             }
             break;
         }
-/*
-        case 6: {
+
+        case 8: {
             ofstream file("data.txt");
-            if (file.is_open()) {
-
-                if (pipeFilled) {
-                    pipe.saveToFile(file);
-                }
-                else {
-                    file << "0\n";
-                }
-
-                if (csFilled) {
-                    compressorStation.saveToFile(file);
-                }
-                else {
-                    file << "0\n";
-                }
-
-                file.close();
-                cout << "Данные сохранены\n";
-            }
-            else {
+            if (!file.is_open()) {
                 cout << "Ошибка открытия файла\n";
+                break;
             }
+
+            file << pipe.size() << "\n";
+
+            for ( auto& pair : pipe) {
+                pair.second.saveToFile(file);
+            }
+
+            file << compressorStation.size() << "\n";
+            for ( auto& pair : compressorStation) {
+                pair.second.saveToFile(file);
+            }
+
+            file.close();
+            cout << "Данные сохранены\n";
+            
             break;
         }
 
-        case 7: {
+        case 9: {
             ifstream file("data.txt");
-            if (file.is_open()) {
-                bool loadedPipe = pipe.loadFromFile(file);
-                bool loadedCs = compressorStation.loadFromFile(file);
-
-                pipeFilled = loadedPipe;
-                csFilled = loadedCs;
-
-                if (!loadedCs) {
-                    compressorStation = CompressorStation();
-                }
-
-                if (loadedPipe || loadedCs) {
-                    cout << "Данные загружены\n";
-                }
-                else {
-                    cout << "Файл пуст или повреждён\n";
-                }
-                file.close();
-            }
-            else {
+            if (!file.is_open()) {
                 cout << "Файл не найден\n";
+                break;
             }
+
+            pipe.clear();
+            compressorStation.clear();
+
+            int pipeCount;
+            file >> pipeCount;
+            file.ignore();
+
+            for (int i = 0; i < pipeCount; ++i) {
+                Pipe p;
+                p.loadFromFile(file);
+                pipe.emplace(p.getId(), p);
+            }
+
+            int csCount;
+            file >> csCount;
+            file.ignore();
+
+            for (int i = 0; i < csCount; ++i) {
+                CompressorStation cs;
+                cs.loadFromFile(file);
+                compressorStation.emplace(cs.getId(), cs);
+            }
+
+            file.close();
+
+            if (!pipe.empty()) {
+                nextPipeId = pipe.rbegin()->first + 1;
+            }
+
+            if (!compressorStation.empty()) {
+                nextCsId = compressorStation.rbegin()->first + 1;
+            }
+
+            cout << "Загружено труб:" << pipe.size()
+                << ", КС" << compressorStation.size();
             break;
         }
-*/
+
         case 0:
             cout << "Выход из программы\n";
             return 0;
