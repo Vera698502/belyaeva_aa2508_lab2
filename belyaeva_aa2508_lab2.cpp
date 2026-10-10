@@ -5,6 +5,7 @@
 #include <string>
 #include <clocale>
 #include <fstream>
+#include <map>
 
 using namespace std;
 
@@ -13,7 +14,7 @@ private:
     string name;
     double length;
     double diameter;
-    bool repairing;
+    bool repairing;  
 
 public:
     Pipe() : name(""), length(0.0), diameter(0.0), repairing(false) {}
@@ -189,11 +190,11 @@ int main()
 {
     setlocale(LC_ALL, "Russian");
 
-    Pipe pipe;
-    CompressorStation compressorStation;
+    map<int, Pipe> pipe;
+    map<int, CompressorStation> compressorStation;
 
-    bool pipeFilled = false;
-    bool csFilled = false;
+    int nextPipeId = 1;
+    int nextCsId = 1;
 
     while (true) {
         cout << "\nМеню\n"
@@ -202,8 +203,8 @@ int main()
             << "3.Просмотр всех объектов\n"
             << "4.Редактировать трубу (в ремонте/не в ремонте)\n"
             << "5.Редактировать кс (запуск/ остановка цеха)\n"
-            << "6. Сохранить в файл\n"
-            << "7. Загрузить из файла\n"
+            << "6. Удалить трубу по id\n"
+            << "7. Удалить кс по id\n"
             << "0. Выход\n"
             << "\n";
 
@@ -219,41 +220,75 @@ int main()
 
         switch (choice) {
 
-        case 1:
-            pipe.input();
-            pipeFilled = true;
-            cout << "Труба добавлена\n";
+        case 1: {
+            Pipe newPipe;
+            newPipe.input();
+            int id = nextPipeId++;
+            pipe.emplace(id, newPipe);
+            cout << "Труба добавлена (Id" << id << ")\n";
             break;
+        }
 
-        case 2:
-            compressorStation.input();
-            csFilled = true;
-            cout << "Добавлена кс\n";
+        case 2: {
+            CompressorStation newCs;
+            newCs.input();
+            int id = nextCsId++;
+            compressorStation.emplace(id, newCs);
+            cout << "Добавлена кс (Id" << id << ")\n";
             break;
+        }
 
-        case 3:
-            if (!pipeFilled && !csFilled) {
+        case 3: {
+            if (pipe.empty() && compressorStation.empty()) {
                 cout << "Пока ничего не введено\n";
             }
             else {
-                if (pipeFilled) pipe.print();
-                if (csFilled) compressorStation.print();
+                for (const auto& pair : pipe) {
+                    cout << "\n[ID " << pair.first << "]";
+                    pair.second.print();
+                }
+                for (const auto& pair : compressorStation) {
+                    cout << "\n[id " << pair.first << "]";
+                    pair.second.print();
+                }
             }
             break;
+        }
 
-        case 4:
-            if (!pipeFilled) {
+        case 4: {
+            if (pipe.empty()) {
                 cout << "Сначала добавьте трубу (п.1)\n";
+                break;
+            }
+            cout << "Введите id трубы\n";
+            int id;
+            cin >> id;
+
+            auto it = pipe.find(id);
+            if (it == pipe.end()) {
+                cout << "Труба с Id " << id << "не найдена\n";
             }
             else {
-                pipe.inTheRepair();
+                it->second.inTheRepair();
             }
             break;
+        }
 
-        case 5:
-            if (!csFilled) {
+        case 5: {
+            if (compressorStation.empty()) {
                 cout << "Сначала добавьте кс\n";
+                break;
             }
+            cout << "Введите id кс\n";
+            int id;
+            cin >> id;
+
+            auto it = compressorStation.find(id);
+            if (it == compressorStation.end()) {
+                cout << "КС с Id" << id << "не найдена\n";
+                break;
+            }
+
             else {
                 cout << "1.Запустить цех\n"
                     << "2. Остановить цех\n";
@@ -267,17 +302,56 @@ int main()
                 }
                 switch (sub) {
                 case 1:
-                    compressorStation.startWorkshop();
+                    it->second.startWorkshop();
                     break;
                 case 2:
-                    compressorStation.stopWorkshop();
+                    it->second.stopWorkshop();
                     break;
                 default:
                     cout << "Неверный пункт меню\n";
                 }
             }
             break;
+        }
 
+        case 6: {
+            if (pipe.empty()) {
+                cout << "Сначала добавьте трубу(п 1)\n";
+                break;
+            }
+
+            cout << "Введите id трубы для удаления\n";
+            int id;
+            cin >> id;
+
+            if (pipe.erase(id) > 0) {
+                cout << "Труба с ID " << id << " удалена\n";
+            }
+            else {
+                cout << "Труба с ID " << id << " не найдена\n";
+            }
+            break;
+        }
+
+        case 7: {
+            if (compressorStation.empty()) {
+                cout << "Сначала добавьте кс\n";
+                break;
+            }
+
+            cout << "Введите id кс для удаления\n";
+            int id;
+            cin >> id;
+
+            if (compressorStation.erase(id) > 0) {
+                cout << "Кс с id " << id << "удалена\n";
+            }
+            else {
+                cout << "Кс с таким id не найдено\n";
+            }
+            break;
+        }
+/*
         case 6: {
             ofstream file("data.txt");
             if (file.is_open()) {
@@ -331,7 +405,7 @@ int main()
             }
             break;
         }
-
+*/
         case 0:
             cout << "Выход из программы\n";
             return 0;
