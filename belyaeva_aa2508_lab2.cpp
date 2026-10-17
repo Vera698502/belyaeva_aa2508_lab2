@@ -201,6 +201,8 @@ public:
 
 int main()
 {
+    ofstream log("log.txt", ios::app); 
+    log << "\nЗапуск программы \n";
     setlocale(LC_ALL, "Russian");
 
     map<int, Pipe> pipe;
@@ -222,6 +224,7 @@ int main()
             <<"9. Выгрузить из файла\n"
             <<"10. Поиск труб\n"
             <<"11. Поиск Кс\n"
+            << "12. Пакетное редактирование труб\n"
             << "0. Выход\n"
             << "\n";
 
@@ -243,6 +246,7 @@ int main()
             newPipe.input();
             pipe.emplace(id, newPipe);
             cout << "Труба добавлена (Id" << id << ")\n";
+            log << "Добавлена труба ID: " << id << "\n";
             break;
         }
 
@@ -252,6 +256,7 @@ int main()
             newCs.input();
             compressorStation.emplace(id, newCs);
             cout << "Добавлена кс (Id" << id << ")\n";
+            log << "Добавлена кс ID: " << id << "\n";
             break;
         }
 
@@ -287,6 +292,7 @@ int main()
             }
             else {
                 it->second.inTheRepair();
+                log << "Статус трубы ID " << id << " изменен (ремонт)\n";
             }
             break;
         }
@@ -320,9 +326,11 @@ int main()
                 switch (sub) {
                 case 1:
                     it->second.startWorkshop();
+                    log << "Запущен цех на КС ID " << id << "\n";
                     break;
                 case 2:
                     it->second.stopWorkshop();
+                    log << "Остановлен цех на КС ID " << id << "\n";
                     break;
                 default:
                     cout << "Неверный пункт меню\n";
@@ -343,6 +351,7 @@ int main()
 
             if (pipe.erase(id) > 0) {
                 cout << "Труба с ID " << id << " удалена\n";
+                log << "Удалена труба ID " << id << "\n";
             }
             else {
                 cout << "Труба с ID " << id << " не найдена\n";
@@ -362,6 +371,7 @@ int main()
 
             if (compressorStation.erase(id) > 0) {
                 cout << "Кс с id " << id << "удалена\n";
+                log << "Удалена КС ID " << id << "\n";
             }
             else {
                 cout << "Кс с таким id не найдено\n";
@@ -370,7 +380,10 @@ int main()
         }
 
         case 8: {
-            ofstream file("data.txt");
+            cout << "Введите имя файла для сохранения: ";
+            string filename;
+            cin >> filename;
+            ofstream file(filename);
             if (!file.is_open()) {
                 cout << "Ошибка открытия файла\n";
                 break;
@@ -389,12 +402,16 @@ int main()
 
             file.close();
             cout << "Данные сохранены\n";
+            log << "Данные сохранены в файл: " << filename << "\n";
             
             break;
         }
 
         case 9: {
-            ifstream file("data.txt");
+            cout << "Введите имя файла для загрузки: ";
+            string filename;
+            cin >> filename;
+            ifstream file(filename);
             if (!file.is_open()) {
                 cout << "Файл не найден\n";
                 break;
@@ -413,7 +430,8 @@ int main()
                 pipe.emplace(p.getId(), p);
             }
 
-            int csCount;            file >> csCount;
+            int csCount;            
+            file >> csCount;
             file.ignore();
 
             for (int i = 0; i < csCount; ++i) {
@@ -434,6 +452,7 @@ int main()
 
             cout << "Загружено труб:" << pipe.size()
                 << ", КС" << compressorStation.size();
+            log << "Загружены данные из файла: " << filename << "\n";
             break;
         }
         case 10: {
@@ -488,6 +507,7 @@ int main()
                     pipe.at(id).print();
                 }
             }
+            log << "Выполнен поиск труб\n";
             break;
         }
 
@@ -542,12 +562,139 @@ int main()
                     compressorStation.at(id).print();
                 }
             }
+            log << "Выполнен поиск КС\n";
             break;
 
+        }
+        case 12: {
+            if (pipe.empty()) {
+                cout << "Нет трубы для поиска\n";
+                break;
+            }
+            cout << "Шаг 1. Поиск труб.\n";
+            cout << "Искать по названию-1, по ремонту-2: ";
+            int filterChoice;
+            cin >> filterChoice;
+
+            vector<int> foundIds;
+
+            if (filterChoice == 1) {
+                cout << "Введите название: ";
+                cin.ignore();
+                string query;
+                getline(cin, query);
+                for (const auto& pair : pipe) {
+                    if (pair.second.matchesName(query)) foundIds.push_back(pair.first);
+                }
+            }
+            else if (filterChoice == 2) {
+                cout << "Искать в ремонте? (1 - да, 0 - нет): ";
+                bool state;
+                cin >> state;
+                for (const auto& pair : pipe) {
+                    if (pair.second.matchesRepair(state)) foundIds.push_back(pair.first);
+                }
+            }
+            else {
+                cout << "Неверный фильтр\n";
+                break;
+            }
+
+            if (foundIds.empty()) {
+                cout << "Ничего не найдено. Пакетное редактирование отменено.\n";
+                break;
+            }
+
+            cout << "Найдено труб: " << foundIds.size() << "\n";
+            for (int id : foundIds) {
+                pipe.at(id).print();
+            }
+
+            cout << "\nЧто сделать с этими трубами?\n"
+                << "1 - Отправить в ремонт\n"
+                << "2 - Вернуть из ремонта\n"
+                << "3 - Удалить\n"
+                << "0 - Отмена\n"
+                << "Выбор: ";
+            int action;
+            cin >> action;
+
+            if (action == 0) {
+                break;
+            }
+
+            cout << "\nПрименить ко всем найденным(1) или к выбранным(2)\n";
+            int scopeChoice;
+            cin >> scopeChoice;
+
+            vector <int> finalList;
+
+            if (scopeChoice == 1) {
+                finalList = foundIds;
+            }
+
+            else if (scopeChoice == 2) {
+                cout << "Введи ID труб по одному, 0 - закончить\n";
+                while (true) {
+                    int inputId;
+                    cin >> inputId;
+
+                    if (inputId == 0) {
+                        break;
+                    }
+
+                    bool isFound = false;
+                    for (int id : foundIds) {
+                        if (id == inputId) {
+                            isFound = true;
+                            break;
+                        }
+                    }
+
+                    if (isFound) {
+                        finalList.push_back(inputId);
+                    }
+                    else {
+                        cout << "ID " << inputId << " нет в списке найденных!\n";
+                    }
+                }
+            }
+
+            else {
+                cout << "Неверный выбор\n";
+                break;
+            }
+
+            if (finalList.empty()) {
+                cout << "Список пуст. Отмена\n";
+                break;
+            }
+
+            int count = 0;
+            for (int id : finalList) {
+                if (action == 1) {
+                    pipe.at(id).setRepairing(true);
+                    count++;
+                }
+                else if (action == 2) {
+                    pipe.at(id).setRepairing(false);
+                    count++;
+                }
+
+                else if (action == 3) {
+                    pipe.erase(id);
+                    count++;
+                }
+            }
+            cout << "Успешно обработано труб: " << count << "\n";
+            log << "Пакетное редактирование. Обработано труб: " << count << "\n";
+            break;
         }
 
         case 0:
             cout << "Выход из программы\n";
+            log << "Завершение работы программы\n"; 
+            log.close();
             return 0;
 
         default:
