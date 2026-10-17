@@ -87,6 +87,12 @@ public:
         file.ignore();
         return true;
     }
+    bool matchesName(const string& query) const {
+        return name == query;
+    }
+    bool matchesRepair(bool reparState) const {
+        return repairing == reparState;
+    }
 };
 
 class CompressorStation {
@@ -175,6 +181,20 @@ public:
         file >> stationClass;
         file.ignore();
         return true;
+    }
+    double getIdlePercent() const {
+        if (numberOfWorkshops == 0) {
+            return 0;
+        }
+        return (numberOfWorkshops - operatingWorkshops) * 100.0 / numberOfWorkshops;
+    }
+
+    bool matchesName(const string& query) const {
+        return name == query;
+    }
+
+    bool machesIdlePercent(double minPercent) const {
+        return getIdlePercent() >= minPercent;
     }
 };
 
@@ -390,8 +410,7 @@ int main()
                 pipe.emplace(p.getId(), p);
             }
 
-            int csCount;
-            file >> csCount;
+            int csCount;            file >> csCount;
             file.ignore();
 
             for (int i = 0; i < csCount; ++i) {
