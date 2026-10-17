@@ -6,6 +6,7 @@
 #include <clocale>
 #include <fstream>
 #include <map>
+#include <vector>
 
 using namespace std;
 
@@ -219,6 +220,8 @@ int main()
             << "7. Удалить кс по id\n"
             <<"8. Загрузить в файл\n"
             <<"9. Выгрузить из файла\n"
+            <<"10. Поиск труб\n"
+            <<"11. Поиск Кс\n"
             << "0. Выход\n"
             << "\n";
 
@@ -432,6 +435,115 @@ int main()
             cout << "Загружено труб:" << pipe.size()
                 << ", КС" << compressorStation.size();
             break;
+        }
+        case 10: {
+            if (pipe.empty()) {
+                cout << "Нет труб для поиска\n";
+                break;
+            }
+
+            cout << "Искать трубу по названию-1, по ремонту -2";
+            int filtrChoice;
+            cin >> filtrChoice;
+
+            vector<int> foundId;
+
+            if (filtrChoice == 1) {
+                cout << "Введите название для поиска";
+                cin.ignore();
+                string query;
+                getline(cin, query);
+
+                for (const auto& pair : pipe) {
+                    if (pair.second.matchesName(query)) {
+                        foundId.push_back(pair.first);
+                    }
+                }
+            }
+
+            else if (filtrChoice == 2) {
+                cout << "Искать в ремонте? (1 - да, 0 - нет)";
+                bool state;
+                cin >> state;
+
+                for (const auto& pair : pipe) {
+                    if (pair.second.matchesRepair(state)) {
+                        foundId.push_back(pair.first);
+                    }
+                }  
+            }
+
+            else {
+                cout << "Неверный тип фильтра!\n";
+                break;
+            }
+
+            if (foundId.empty()) {
+                cout << "Труб не найдено!\n";
+            }
+
+            else {
+                cout << "Найдено труб: " << foundId.size() << "\n";
+                for (int id : foundId) {
+                    pipe.at(id).print();
+                }
+            }
+            break;
+        }
+
+        case 11: {
+            if (compressorStation.empty()) {
+                cout << "Нет кс для поиска\n";
+                break;
+            }
+
+            cout << "Искать по названию -1, по проценту незадействованных -2";
+            int filterType;
+            cin >> filterType;
+
+            vector <int> foundId;
+
+            if (filterType == 1) {
+                cout << "Введите название для поиска\n";
+                cin.ignore();
+                string query;
+                getline(cin, query);
+
+                for (const auto& pair : compressorStation) {
+                    if (pair.second.matchesName(query)) {
+                        foundId.push_back(pair.first);
+                    }
+                }
+            }
+
+            else if (filterType == 2) {
+                cout << "Введите минимальный процент незадействованных цехов (например, 50):";
+                double percent;
+                cin >> percent;
+
+                for (const auto& pair : compressorStation) {
+                    if (pair.second.machesIdlePercent(percent)) {
+                        foundId.push_back(pair.first);
+                    }
+                }
+            }
+
+            else {
+                cout << "Неверный тип фильтра\n";
+                break;
+            }
+
+            if (foundId.empty()) {
+                cout << "Ничего не найдено\n";
+            }
+            else {
+                cout << "Найдено кс" << foundId.size() << "\n";
+                for (int id : foundId) {
+                    compressorStation.at(id).print();
+                }
+            }
+            break;
+
         }
 
         case 0:
