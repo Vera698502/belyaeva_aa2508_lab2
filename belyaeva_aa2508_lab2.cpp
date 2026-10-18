@@ -15,18 +15,15 @@ private:
     double diameter;
     bool repairing;
 
+    inline static int nextId = 1;
+
 public:
-    Pipe(int newId = 0) : id(newId), name(""), length(0.0), diameter(0.0), repairing(false) {}
+    Pipe() : id(nextId++), name(""), length(0.0), diameter(0.0), repairing(false) {}
 
-    string getName() const { return name; }
-    double getLength() const { return length; }
-    double getDiametr() const { return diameter; }
-    bool isRepairing() const { return repairing; }
     int getId() const { return id; }
+    string getName() const { return name; }
+    bool isRepairing() const { return repairing; }
 
-    void setName(const string& newName) { name = newName; }
-    void setLength(double newLength) { length = newLength; }
-    void setDiameter(double newDiameter) { diameter = newDiameter; }
     void setRepairing(bool newRepairing) { repairing = newRepairing; }
 
     void input() {
@@ -47,7 +44,6 @@ public:
             cin.ignore(10000, '\n');
             cout << "Ошибка! Введите положительное число: ";
         }
-
         repairing = false;
     }
 
@@ -56,41 +52,33 @@ public:
             << "Название: " << name << "\n"
             << "Длина: " << length << " км\n"
             << "Диаметр: " << diameter << " мм\n"
-            << "Состояние: "
-            << (repairing ? "В ремонте" : "В работе")
-            << "\n";
+            << "Состояние: " << (repairing ? "В ремонте" : "В работе") << "\n";
     }
 
     void inTheRepair() {
         repairing = !repairing;
-        cout << "Признак изменён. Труба теперь: "
-            << (repairing ? "В ремонте" : "В работе") << "\n";
+        cout << "Признак изменён. Труба теперь: " << (repairing ? "В ремонте" : "В работе") << "\n";
     }
 
     void saveToFile(ofstream& file) {
-        file << id << "\n";
-        file << name << "\n";
-        file << length << "\n";
-        file << diameter << "\n";
-        file << repairing << "\n";
+        file << id << "\n" << name << "\n" << length << "\n" << diameter << "\n" << repairing << "\n";
     }
 
     bool loadFromFile(ifstream& file) {
-        file >> id;
+        if (!(file >> id)) return false;
         file.ignore();
-        getline(file, name);
-        file >> length;
-        file >> diameter;
-        file >> repairing;
+        if (!getline(file, name)) return false;
+        if (!(file >> length)) return false;
+        if (!(file >> diameter)) return false;
+        if (!(file >> repairing)) return false;
         file.ignore();
+
+        if (id >= nextId) nextId = id + 1;
         return true;
     }
-    bool matchesName(const string& query) const {
-        return name == query;
-    }
-    bool matchesRepair(bool reparState) const {
-        return repairing == reparState;
-    }
+
+    bool matchesName(const string& query) const { return name == query; }
+    bool matchesRepair(bool repairState) const { return repairing == repairState; }
 };
 
 class CompressorStation {
@@ -101,19 +89,13 @@ private:
     int operatingWorkshops;
     int stationClass;
 
+    inline static int nextId = 1;
+
 public:
-    CompressorStation(int newId = 0) : id(newId), name(""), numberOfWorkshops(0), operatingWorkshops(0), stationClass(0) {}
+    CompressorStation() : id(nextId++), name(""), numberOfWorkshops(0), operatingWorkshops(0), stationClass(0) {}
 
-    string getName() const { return name; }
-    int getNumberOfWorkshops() const { return numberOfWorkshops; }
-    int getOperatingWorkshops() const { return operatingWorkshops; }
-    int getStationClass() const { return stationClass; }
     int getId() const { return id; }
-
-    void setName(const string& newName) { name = newName; }
-    void setNumberOfWorkshops(int n) { numberOfWorkshops = n; }
-    void setOperatingWorkshops(int n) { operatingWorkshops = n; }
-    void setStationClass(int n) { stationClass = n; }
+    string getName() const { return name; }
 
     void input() {
         cout << "Введите название кс: ";
@@ -143,66 +125,52 @@ public:
             << "Количество цехов: " << numberOfWorkshops << "\n"
             << "Количество работающих цехов: " << operatingWorkshops << "\n"
             << "Класс станции: " << stationClass << "\n"
-            << "Станция "
-            << (operatingWorkshops > 0 ? "Работает " : "Простаивает")
-            << "\n";
+            << "Станция " << (operatingWorkshops > 0 ? "Работает " : "Простаивает") << "\n";
     }
 
     void startWorkshop() {
         bool canStart = (operatingWorkshops < numberOfWorkshops);
-        cout << (canStart ? "Цех запущен.\n"
-            : "Нельзя, все цеха в работе\n");
+        cout << (canStart ? "Цех запущен.\n" : "Нельзя, все цеха в работе\n");
         if (canStart) operatingWorkshops++;
     }
 
     void stopWorkshop() {
         bool canStop = (operatingWorkshops > 0);
-        cout << (canStop ? "Цех остановлен. \n"
-            : "Нельзя, нет работающих цехов\n");
+        cout << (canStop ? "Цех остановлен.\n" : "Нельзя, нет работающих цехов\n");
         if (canStop) operatingWorkshops--;
     }
 
     void saveToFile(ofstream& file) {
-        file << id << "\n";
-        file << name << "\n";
-        file << numberOfWorkshops << "\n";
-        file << operatingWorkshops << "\n";
-        file << stationClass << "\n";
+        file << id << "\n" << name << "\n" << numberOfWorkshops << "\n" << operatingWorkshops << "\n" << stationClass << "\n";
     }
 
     bool loadFromFile(ifstream& file) {
-        file >> id;
+        if (!(file >> id)) return false;
         file.ignore();
-        getline(file, name);
-        file >> numberOfWorkshops;
-        file >> operatingWorkshops;
-        file >> stationClass;
+        if (!getline(file, name)) return false;
+        if (!(file >> numberOfWorkshops)) return false;
+        if (!(file >> operatingWorkshops)) return false;
+        if (!(file >> stationClass)) return false;
         file.ignore();
+
+        if (id >= nextId) nextId = id + 1;
         return true;
     }
+
     double getIdlePercent() const {
-        if (numberOfWorkshops == 0) {
-            return 0;
-        }
+        if (numberOfWorkshops == 0) return 0;
         return (numberOfWorkshops - operatingWorkshops) * 100.0 / numberOfWorkshops;
     }
 
-    bool matchesName(const string& query) const {
-        return name == query;
-    }
-
-    bool matchesIdlePercent(double minPercent) const {
-        return getIdlePercent() >= minPercent;
-    }
+    bool matchesName(const string& query) const { return name == query; }
+    bool matchesIdlePercent(double minPercent) const { return getIdlePercent() >= minPercent; }
 };
 
 int readInt(const string& prompt) {
     int value;
     while (true) {
         cout << prompt;
-        if (cin >> value) {
-            return value;
-        }
+        if (cin >> value) return value;
         cin.clear();
         cin.ignore(10000, '\n');
         cout << "Ошибка! Введите целое число.\n";
@@ -239,14 +207,11 @@ vector<int> findPipes(const map<int, Pipe>& pipe) {
 int main()
 {
     ofstream log("log.txt", ios::app);
-    log << "\nЗапуск программы \n";
+    log << "\nЗапуск программы\n";
     setlocale(LC_ALL, "Russian");
 
     map<int, Pipe> pipe;
     map<int, CompressorStation> compressorStation;
-
-    int nextPipeId = 1;
-    int nextCsId = 1;
 
     while (true) {
         cout << "\nМеню\n"
@@ -262,30 +227,27 @@ int main()
             << "10. Поиск труб\n"
             << "11. Поиск КС\n"
             << "12. Пакетное редактирование труб\n"
-            << "0. Выход\n"
-            << "\n";
+            << "0. Выход\n\n";
 
         int choice = readInt("Ваш выбор: \n");
 
         switch (choice) {
 
         case 1: {
-            int id = nextPipeId++;
-            Pipe newPipe(id);
+            Pipe newPipe; 
             newPipe.input();
-            pipe.emplace(id, newPipe);
-            cout << "Труба добавлена (Id" << id << ")\n";
-            log << "Добавлена труба ID: " << id << "\n";
+            pipe.emplace(newPipe.getId(), newPipe); 
+            cout << "Труба добавлена (Id" << newPipe.getId() << ")\n";
+            log << "Добавлена труба ID: " << newPipe.getId() << "\n";
             break;
         }
 
         case 2: {
-            int id = nextCsId++;
-            CompressorStation newCs(id);
+            CompressorStation newCs; 
             newCs.input();
-            compressorStation.emplace(id, newCs);
-            cout << "Добавлена кс (Id" << id << ")\n";
-            log << "Добавлена кс ID: " << id << "\n";
+            compressorStation.emplace(newCs.getId(), newCs);
+            cout << "Добавлена кс (Id" << newCs.getId() << ")\n";
+            log << "Добавлена кс ID: " << newCs.getId() << "\n";
             break;
         }
 
@@ -294,12 +256,8 @@ int main()
                 cout << "Пока ничего не введено\n";
             }
             else {
-                for (const auto& pair : pipe) {
-                    pair.second.print();
-                }
-                for (const auto& pair : compressorStation) {
-                    pair.second.print();
-                }
+                for (const auto& pair : pipe) pair.second.print();
+                for (const auto& pair : compressorStation) pair.second.print();
             }
             break;
         }
@@ -356,7 +314,7 @@ int main()
 
         case 6: {
             if (pipe.empty()) {
-                cout << "Сначала добавьте трубу(п 1)\n";
+                cout << "Сначала добавьте трубу (п.1)\n";
                 break;
             }
             int id = readInt("Введите id трубы для удаления: ");
@@ -399,14 +357,10 @@ int main()
             }
 
             file << pipe.size() << "\n";
-            for (auto& pair : pipe) {
-                pair.second.saveToFile(file);
-            }
+            for (auto& pair : pipe) pair.second.saveToFile(file);
 
             file << compressorStation.size() << "\n";
-            for (auto& pair : compressorStation) {
-                pair.second.saveToFile(file);
-            }
+            for (auto& pair : compressorStation) pair.second.saveToFile(file);
 
             file.close();
             cout << "Данные сохранены\n";
@@ -424,43 +378,56 @@ int main()
                 break;
             }
 
-            if (file.peek() == EOF) {
-                cout << "Файл пуст!\n";
-                file.close();
+            int pipeCount, csCount;
+            if (!(file >> pipeCount)) {
+                cout << "Ошибка: файл поврежден (нет данных о трубах)!\n";
                 break;
             }
+            file.ignore();
 
             pipe.clear();
             compressorStation.clear();
-
-            int pipeCount;
-            file >> pipeCount;
-            file.ignore();
+            bool isBroken = false;
 
             for (int i = 0; i < pipeCount; ++i) {
                 Pipe p;
-                p.loadFromFile(file);
+                if (!p.loadFromFile(file)) {
+                    isBroken = true;
+                    break;
+                }
                 pipe.emplace(p.getId(), p);
             }
 
-            int csCount;
-            file >> csCount;
+            if (isBroken) {
+                cout << "Ошибка чтения труб! Файл поврежден.\n";
+                pipe.clear();
+                break;
+            }
+
+            if (!(file >> csCount)) {
+                cout << "Ошибка: файл поврежден (нет данных о КС)!\n";
+                pipe.clear();
+                break;
+            }
             file.ignore();
 
             for (int i = 0; i < csCount; ++i) {
                 CompressorStation cs;
-                cs.loadFromFile(file);
+                if (!cs.loadFromFile(file)) {
+                    isBroken = true;
+                    break;
+                }
                 compressorStation.emplace(cs.getId(), cs);
             }
 
-            file.close();
+            if (isBroken) {
+                cout << "Ошибка чтения КС! Файл поврежден.\n";
+                pipe.clear();
+                compressorStation.clear();
+                break;
+            }
 
-            if (!pipe.empty()) {
-                nextPipeId = pipe.rbegin()->first + 1;
-            }
-            if (!compressorStation.empty()) {
-                nextCsId = compressorStation.rbegin()->first + 1;
-            }
+            file.close();
 
             cout << "Загружено труб: " << pipe.size() << ", КС: " << compressorStation.size() << "\n";
             log << "Загружены данные из файла: " << filename << "\n";
@@ -478,9 +445,7 @@ int main()
             }
             else {
                 cout << "Найдено труб: " << found.size() << "\n";
-                for (int id : found) {
-                    pipe.at(id).print();
-                }
+                for (int id : found) pipe.at(id).print();
             }
             log << "Выполнен поиск труб\n";
             break;
@@ -494,7 +459,7 @@ int main()
             cout << "Искать по названию -1, по проценту незадействованных -2: ";
             int filterType = readInt("");
 
-            vector <int> foundId;
+            vector<int> foundId;
 
             if (filterType == 1) {
                 cout << "Введите название для поиска: ";
@@ -502,18 +467,14 @@ int main()
                 string query;
                 getline(cin, query);
                 for (const auto& pair : compressorStation) {
-                    if (pair.second.matchesName(query)) {
-                        foundId.push_back(pair.first);
-                    }
+                    if (pair.second.matchesName(query)) foundId.push_back(pair.first);
                 }
             }
             else if (filterType == 2) {
                 cout << "Введите минимальный процент незадействованных цехов: ";
                 double percent; cin >> percent;
                 for (const auto& pair : compressorStation) {
-                    if (pair.second.matchesIdlePercent(percent)) {
-                        foundId.push_back(pair.first);
-                    }
+                    if (pair.second.matchesIdlePercent(percent)) foundId.push_back(pair.first);
                 }
             }
             else {
@@ -521,7 +482,9 @@ int main()
                 break;
             }
 
-            if (foundId.empty()) cout << "Ничего не найдено\n";
+            if (foundId.empty()) {
+                cout << "Ничего не найдено\n";
+            }
             else {
                 cout << "Найдено кс: " << foundId.size() << "\n";
                 for (int id : foundId) compressorStation.at(id).print();
@@ -554,14 +517,12 @@ int main()
                 << "0 - Отмена\n";
             int action = readInt("Выбор: ");
 
-            if (action == 0) {
-                break;
-            }
+            if (action == 0) break;
 
             cout << "\nПрименить ко всем найденным(1) или к выбранным(2): ";
             int scopeChoice = readInt("");
 
-            vector <int> finalList;
+            vector<int> finalList;
 
             if (scopeChoice == 1) {
                 finalList = foundIds;
@@ -580,12 +541,8 @@ int main()
                         }
                     }
 
-                    if (isFound) {
-                        finalList.push_back(inputId);
-                    }
-                    else {
-                        cout << "ID " << inputId << " нет в списке найденных!\n";
-                    }
+                    if (isFound) finalList.push_back(inputId);
+                    else cout << "ID " << inputId << " нет в списке найденных!\n";
                 }
             }
             else {
@@ -600,19 +557,9 @@ int main()
 
             int count = 0;
             for (int id : finalList) {
-                if (action == 1) { 
-                    pipe.at(id).setRepairing(true); 
-                    count++; 
-                }
-                else if (action == 2) { 
-                    pipe.at(id).setRepairing(false); 
-                    count++; 
-                }
-                else if (action == 3) 
-                { 
-                    pipe.erase(id); 
-                    count++; 
-                }
+                if (action == 1) { pipe.at(id).setRepairing(true); count++; }
+                else if (action == 2) { pipe.at(id).setRepairing(false); count++; }
+                else if (action == 3) { pipe.erase(id); count++; }
             }
             cout << "Успешно обработано труб: " << count << "\n";
             log << "Пакетное редактирование. Обработано труб: " << count << "\n";
